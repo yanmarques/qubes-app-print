@@ -1,0 +1,39 @@
+#!/bin/bash
+
+max_wait_time=60
+sleep_interval=1
+
+QREXEC_REMOTE_DOMAIN="$QREXEC_REMOTE_DOMAIN-qubes-print-$RANDOM"
+/usr/lib/qubes/qfile-unpacker
+
+target=$(find ~/QubesIncoming/"$QREXEC_REMOTE_DOMAIN" -type f)
+trap "rm -rf $QREXEC_REMOTE_DOMAIN" EXIT
+
+system-config-printer > /dev/null 2>&1
+
+file "$target" | grep -q -e "OpenDocument" -e "Microsoft"
+if [ $? -eq 0 ]; then
+    sudo lowriter -p "$target"
+    exit 0
+fi
+
+lp_output=$(sudo lp "$target")
+lp_exit_code="$?"
+
+if [ $lp_exit_code -ne 0 ]; then
+    exit "$lp_exit_code"
+fi
+
+notify-send "Waiting job to complete"
+lpqueue=$(echo "$lp_output" | awk '{print $4}')
+waited=0
+
+while [ $waited -lt $max_wait_time ]; do
+    sudo lpstat -W not-completed | grep "$lpqueue" > /dev/null
+    if [ $? -ne 0 ]; then
+        waited=$max_wait_time
+    else
+	sleep "$sleep_interval"
+	waited=$(expr $waited + 1)
+    fi
+done

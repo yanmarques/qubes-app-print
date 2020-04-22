@@ -1,0 +1,50 @@
+#!/bin/sh
+set -e
+
+usage() {
+  echo "Usage: $0 [client|server]" 2>&1
+  exit 128
+}
+
+info() {
+  echo "$(date) - INFO $@"
+}
+
+set_bin_perms() {
+  path="$1"
+  chown root:root "$path" 
+  chmod 755 "$path" 
+}
+
+mode="$1"
+binaries=()
+target_bin_dir="${BINARY_DIR:-/usr/bin}"
+
+case "$mode" in
+  client)
+	  # see https://github.com/QubesOS/qubes-core-agent-linux/blob/master/debian/qubes-core-agent-thunar.postinst
+	  if [ -f /etc/xdg/Thunar/uca.xml ]; then
+	    info "Copying Thunar actions Thunar/uca.xml to /etc/xdg/Thunar/uca.xml"
+	    cp -p /etc/xdg/Thunar/uca.xml /etc/xdg/Thunar/uca.xml.bak
+	    sed -i '$e cat Thunar/uca.xml' /etc/xdg/Thunar/uca.xml
+	  fi
+
+          binaries+=( "${target_bin_dir%/}/qvm-print-in-vm" )
+          binaries+=( "${target_bin_dir%/}/qvm-print-in-dvm" )
+	  ;;
+
+  server)
+	  binaries+=( '/etc/qubes-rpc/qubes.PrintFile' )
+	  ;;
+
+  *) 
+	  usage 
+	  ;; 
+esac
+
+for path in "${binaries[@]}"; do 
+  info "Copy Qubes binary ${path##*/} to ${path%/*}"
+  cp -ib "${path##*/}" "${path%/*}" && set_bin_perms "$path" 
+done
+
+info Fineshed!

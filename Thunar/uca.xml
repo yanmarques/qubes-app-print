@@ -1,0 +1,24 @@
+<action>
+	<icon>document-print</icon>
+	<name>Print in DisposableVM</name>
+	<unique-id>1585942387981149-1</unique-id>
+	<command>/usr/bin/qvm-print-in-dvm -f %f</command>
+	<description></description>
+	<patterns>*</patterns>
+	<startup-notify/>
+	<image-files/>
+	<other-files/>
+	<text-files/>
+</action>
+<action>
+	<icon>document-print</icon>
+	<name>Print in VM</name>
+	<unique-id>1585947696978241-1</unique-id>
+	<command>/usr/bin/qvm-print-in-vm -f %f</command>
+	<description></description>
+	<patterns>*</patterns>
+	<startup-notify/>
+	<image-files/>
+	<other-files/>
+	<text-files/>
+</action>

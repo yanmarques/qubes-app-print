@@ -1,0 +1,53 @@
+#!/bin/sh
+
+error() {
+  echo "$(date) - ERROR $@" 2>&1
+}
+
+usage() {
+  cat <<EOF 2>&1
+Usage: $0 [-h] [-d VMNAME] -f FILEPATH
+
+Arguments
+	-f FILEPATH	Specify which file to print
+
+Optional Arguments
+	-d VMNAME	Use a custom domain for printing. By default the
+			'@default' domain value is used.
+
+Options
+	-h 		Show this message
+EOF
+  exit 1
+}
+
+while getopts 'd:f:h' opt; do
+  case "$opt" in
+    d)
+	vmname="$OPTARG"
+	;;
+    f)
+	filepath="$OPTARG"
+	;;
+    h)
+	usage
+	;;
+    *)
+	error "Unknow option: $opt"
+	usage
+	;;
+  esac
+done
+
+if [ -z "$filepath" ]; then
+  error "Missing path to file argument."
+  echo
+  usage
+fi
+
+if [ -z "$vmname" ]; then
+  vmname='@default'
+fi
+
+notify-send "Printing file in $vmname domain..."
+exec /usr/lib/qubes/qrexec-client-vm "$vmname" qubes.PrintFile /usr/lib/qubes/qfile-agent "$filepath"
